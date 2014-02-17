@@ -14,6 +14,9 @@
 #include "addrspace.h"
 #include "synch.h"
 
+#ifdef CHANGED
+#include "synchconsole.h"
+#endif // CHANGED
 //----------------------------------------------------------------------
 // StartProcess
 //      Run a user program.  Open the executable, load it into
@@ -67,6 +70,21 @@ WriteDone (int arg)
 {
     writeDone->V ();
 }
+//--------------------------------
+// SynchConsole
+//--------------------------------
+#ifdef CHANGED
+void
+SynchConsoleTest (char *in, char *out)
+{
+char ch;
+	SynchConsole *synchconsole = new SynchConsole(in, out);
+	while ((ch = synchconsole->SynchGetChar()) != EOF)
+		synchconsole->SynchPutChar(ch);
+	fprintf(stderr, "Solaris: EOF detected in SynchConsole!\n");
+}
+#endif // CHANGED
+
 
 //----------------------------------------------------------------------
 // ConsoleTest
@@ -85,11 +103,29 @@ ConsoleTest (char *in, char *out)
 
     for (;;)
       {
+		
+
+
 	  readAvail->P ();	// wait for character to arrive
 	  ch = console->GetChar ();
+
+	  
+	  if (ch != '\n' && ch != EOF){	// On affiche pas les caractères retour a la ligne et end of file
+	  	console->PutChar ('<');	
+	  	writeDone->P ();	// Attente de la fin du write du <
+	  }
+
+
+
 	  console->PutChar (ch);	// echo it!
 	  writeDone->P ();	// wait for write to finish
-	  if (ch == 'q')
+
+	  if (ch != '\n' && ch != EOF){	// On affiche pas les caractères retour a la ligne et end of file
+	  	console->PutChar ('>');	
+	  	writeDone->P ();	// Attente de la fin du write du >
+	  }
+
+	  if (ch == 'q' || ch == EOF)
 	      return;		// if q, quit
       }
 }
