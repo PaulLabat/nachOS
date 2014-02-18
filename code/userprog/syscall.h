@@ -30,6 +30,7 @@
 #define SC_Fork		9
 #define SC_Yield	10
 
+// Definition de putchar
 #ifdef CHANGED
 #define SC_PutChar	11
 #endif // CHANGED

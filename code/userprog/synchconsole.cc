@@ -28,14 +28,28 @@ SynchConsole::~SynchConsole()
 
 void SynchConsole::SynchPutChar(const char ch)
 {
+
 	console->PutChar (ch);
 	writeDone->P();
+	
+	if (ch != '\n' && ch != EOF){	// On affiche pas les caractères retour a la ligne et end of file
+		console->PutChar ('>');	
+		writeDone->P ();	// Attente de la fin du write du >
+	}
 }
 
 char SynchConsole::SynchGetChar()
 {
 	readAvail->P ();
-	return console->GetChar ();
+	char ch = console->GetChar ();
+
+	  
+	if (ch != '\n' && ch != EOF){	// On affiche pas les caractères retour a la ligne et end of file
+	  	console->PutChar ('<');	
+	  	writeDone->P ();	// Attente de la fin du write du <
+	}
+	
+	return ch;
 }
 
 void SynchConsole::SynchPutString(const char s[])
