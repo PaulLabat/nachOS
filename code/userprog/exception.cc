@@ -25,6 +25,21 @@
 #include "system.h"
 #include "syscall.h"
 
+//-----------------------------------------------------------------------
+// copyStringFromMachine : use for PutString
+//-----------------------------------------------------------------------
+
+#ifdef CHANGED
+void copyStringFromMachine(int from, char *to, unsigned size)
+{
+	unsigned i = 0;
+	for(i = 0; i < size && machine->mainMemory[from+i] !='\0'; i++){
+		to[i] = machine->mainMemory[from+i];
+	}
+	to[i] = '\0';
+}
+#endif // CHANGED
+
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
 // the user program immediately after the "syscall" instruction.
@@ -86,6 +101,14 @@ ExceptionHandler(ExceptionType which)
 			case SC_PutChar: {
 				int lecture = machine->ReadRegister (4); // on lis le registre 4 ! c'est un int
 				synchconsole->SynchPutChar ((char) lecture); // affichage
+				break;
+			}
+			case SC_PutString: {
+				char *buffer = new char[MAX_STRING_SIZE];
+				int recup = machine->ReadRegister(4);
+       				copyStringFromMachine(recup, buffer, MAX_STRING_SIZE);
+				synchconsole->SynchPutString(buffer);
+       				delete [] buffer;
 				break;
 			}
 			default: {

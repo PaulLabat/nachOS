@@ -30,9 +30,10 @@
 #define SC_Fork		9
 #define SC_Yield	10
 
-// Definition de putchar
+// Definition de putchar, putstring
 #ifdef CHANGED
 #define SC_PutChar	11
+#define SC_PutString	12
 #endif // CHANGED
 
 #ifdef IN_USER_MODE
@@ -137,6 +138,7 @@ void Yield ();
 */
 #ifdef CHANGED
 void PutChar(char c);
+void PutString(char *c);
 #endif // CHANGED
 
 #endif // IN_USER_MODE

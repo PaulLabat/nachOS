@@ -53,12 +53,16 @@ char SynchConsole::SynchGetChar()
 
 void SynchConsole::SynchPutString(const char s[])
 {
-// ...
+	int i;
+        for(i=0;i<MAX_STRING_SIZE && s[i]!='\0';i++) {
+                synchconsole->SynchPutChar((char)s[i]);
+        }
+        synchconsole->SynchPutChar('\n');
 }
 
 void SynchConsole::SynchGetString(char *s, int n)
 {
-// ...
+	
 }
 
 
