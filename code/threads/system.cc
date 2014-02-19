@@ -27,9 +27,18 @@ FileSystem *fileSystem;
 SynchDisk *synchDisk;
 #endif
 
+#ifndef CHANGED
 #ifdef USER_PROGRAM		// requires either FILESYS or FILESYS_STUB
 Machine *machine;		// user program memory and registers
 #endif
+
+#else // CHANGED
+#ifdef USER_PROGRAM		// requires either FILESYS or FILESYS_STUB
+Machine *machine;		// user program memory and registers
+SynchConsole *synchconsole;
+#endif
+#endif // CHANGED
+
 
 #ifdef NETWORK
 PostOffice *postOffice;
@@ -157,6 +166,9 @@ Initialize (int argc, char **argv)
 
 #ifdef USER_PROGRAM
     machine = new Machine (debugUserProg);	// this must come first
+#ifdef CHANGED
+    synchconsole = new SynchConsole(NULL, NULL);
+#endif // CHANGED
 #endif
 
 #ifdef FILESYS
@@ -186,6 +198,9 @@ Cleanup ()
 
 #ifdef USER_PROGRAM
     delete machine;
+#ifdef CHANGED
+    delete synchconsole;
+#endif
 #endif
 
 #ifdef FILESYS_NEEDED
