@@ -98,6 +98,9 @@ ExceptionHandler(ExceptionType which)
 				interrupt->Halt();
 				break;
 			}
+			case SC_Exit: {
+				break;
+			}
 			case SC_PutChar: {
 				int lecture = machine->ReadRegister (4); // on lis le registre 4 ! c'est un int
 				synchconsole->SynchPutChar ((char) lecture); // affichage

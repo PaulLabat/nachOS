@@ -18,7 +18,8 @@ void print(char c, int n)
 int
 main()
 {
-	print('a',30);
-	Halt();
+	print('a',10);
+	return 0;
+	
 }
 
