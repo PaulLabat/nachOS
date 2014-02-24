@@ -143,7 +143,15 @@ PutString:
 	addiu $2,$0,SC_PutString
 	syscall
 	j	$31
-	.end PutChar
+	.end PutString
+
+	.globl SynchGetChar
+	.ent	SynchGetChar
+SynchGetChar:
+	addiu $2,$0,SC_SynchGetChar
+	syscall
+	j	$31
+	.end SynchGetChar
 
 
 

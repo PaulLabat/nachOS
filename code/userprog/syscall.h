@@ -34,6 +34,7 @@
 #ifdef CHANGED
 #define SC_PutChar	11
 #define SC_PutString	12
+#define SC_SynchGetChar	13
 #endif // CHANGED
 
 #ifdef IN_USER_MODE
@@ -139,6 +140,7 @@ void Yield ();
 #ifdef CHANGED
 void PutChar(char c);
 void PutString(char *c);
+char SynchGetChar();
 #endif // CHANGED
 
 #endif // IN_USER_MODE
