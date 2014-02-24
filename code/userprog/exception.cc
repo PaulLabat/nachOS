@@ -106,7 +106,7 @@ ExceptionHandler(ExceptionType which)
 				synchconsole->SynchPutChar ((char) lecture); // affichage
 				break;
 			}
-			case SC_PutString: {
+			case SC_SynchPutString: {
 				char *buffer = new char[MAX_STRING_SIZE];
 				int recup = machine->ReadRegister(4);
        				copyStringFromMachine(recup, buffer, MAX_STRING_SIZE);

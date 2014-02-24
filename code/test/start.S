@@ -137,13 +137,13 @@ PutChar:
 	j	$31
 	.end PutChar
 
-	.globl PutString
-	.ent	PutString
-PutString:
-	addiu $2,$0,SC_PutString
+	.globl SynchPutString
+	.ent	SynchPutString
+SynchPutString:
+	addiu $2,$0,SC_SynchPutString
 	syscall
 	j	$31
-	.end PutString
+	.end SynchPutString
 
 	.globl SynchGetChar
 	.ent	SynchGetChar

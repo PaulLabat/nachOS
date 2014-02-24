@@ -12,7 +12,7 @@ void print(char c, int n)
 		string[i] = c + i;	
 	}
 	
-	PutString(string);
+	SynchPutString(string);
 	PutChar('\n');
 }
 int
