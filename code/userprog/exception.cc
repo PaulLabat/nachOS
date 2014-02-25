@@ -40,6 +40,24 @@ void copyStringFromMachine(int from, char *to, unsigned size)
 }
 #endif // CHANGED
 
+
+//-----------------------------------------------------------------------
+// copyStringToMachine : use for GetString, fonction pratiquement 
+// identique
+//-----------------------------------------------------------------------
+
+#ifdef CHANGED
+void copyStringToMachine(char *from, char *to, int size)
+{
+	int i = 0;
+	for(i = 0; i < size - 1 && from[i] != '\0'; i++){
+		// char * car si on fait + 1 on se déplace d'un octet
+		machine->mainMemory[(unsigned)(to+i)] = (char) from[i];
+	}
+	machine->mainMemory[(unsigned)(to+i)] = '\0';
+}
+#endif // CHANGED
+
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
 // the user program immediately after the "syscall" instruction.
@@ -117,6 +135,15 @@ ExceptionHandler(ExceptionType which)
 			case SC_SynchGetChar: {
 				char recup = synchconsole->SynchGetChar();
 				machine->WriteRegister(2, (int)recup);
+				break;
+			}
+			case SC_SynchGetString: {
+				char *buffer = new char[MAX_STRING_SIZE];
+				char *recup = (char *)machine->ReadRegister(4);
+				int taille = (int)machine->ReadRegister(5);
+				synchconsole->SynchGetString(buffer, taille);
+				copyStringToMachine(buffer, recup, taille);
+				delete buffer;
 				break;
 			}
 			default: {

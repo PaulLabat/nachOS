@@ -62,7 +62,18 @@ void SynchConsole::SynchPutString(const char s[])
 
 void SynchConsole::SynchGetString(char *s, int n)
 {
-	
+	int i;
+	char c;
+	// attention a ne pas depasser la taille limite...
+	for(i=0; i < n-1; i++){
+		c = synchconsole->SynchGetChar();
+		if(c == EOF || c == '\n'){
+			break;
+		}else{
+			s[i] = c;
+		}
+	}
+	s[i] = '\0';
 }
 
 
