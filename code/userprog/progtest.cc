@@ -102,7 +102,9 @@ void
 ConsoleTest (char *in, char *out)
 {
     char ch;
-
+    #ifdef CHANGED
+    delete synchconsole;
+    #endif //CHANGED
     console = new Console (in, out, ReadAvail, WriteDone, 0);
     readAvail = new Semaphore ("read avail", 0);
     writeDone = new Semaphore ("write done", 0);
@@ -116,19 +118,23 @@ ConsoleTest (char *in, char *out)
 	  ch = console->GetChar ();
 
 	  
-	  if (ch != '\n' && ch != EOF){	// On affiche pas les caractères retour a la ligne et end of file
-	  	console->PutChar ('<');	
-	  	writeDone->P ();	// Attente de la fin du write du <
+	  if(ch == EOF){
+	  	#ifdef CHANGED
+	  	synchconsole = new SynchConsole(NULL, NULL);
+	  	break;
+	  	#endif //CHANGED
 	  }
-
-
-
-	  console->PutChar (ch);	// echo it!
-	  writeDone->P ();	// wait for write to finish
-
-	  if (ch != '\n' && ch != EOF){	// On affiche pas les caractères retour a la ligne et end of file
+ 		
+	  if (ch != '\n'){	// On affiche pas les caractères retour a la ligne et end of file
+		console->PutChar ('<');	
+	  	writeDone->P ();	// Attente de la fin du write du <	
+		console->PutChar (ch);	// echo it!
+  		writeDone->P ();	// wait for write to finish
 	  	console->PutChar ('>');	
 	  	writeDone->P ();	// Attente de la fin du write du >
+	  }else{
+	  	console->PutChar('\n');
+	  	writeDone->P ();
 	  }
 
 	  if (ch == 'q' || ch == EOF)

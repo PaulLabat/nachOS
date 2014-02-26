@@ -129,7 +129,7 @@ ExceptionHandler(ExceptionType which)
 				int recup = machine->ReadRegister(4);
        				copyStringFromMachine(recup, buffer, MAX_STRING_SIZE);
 				synchconsole->SynchPutString(buffer);
-       				delete [] buffer;
+       			delete [] buffer;
 				break;
 			}
 			case SC_SynchGetChar: {
@@ -144,6 +144,11 @@ ExceptionHandler(ExceptionType which)
 				synchconsole->SynchGetString(buffer, taille);
 				copyStringToMachine(buffer, recup, taille);
 				delete buffer;
+				break;
+			}
+			case SC_SynchPutInt: {
+				int recup = machine->ReadRegister(4);
+				synchconsole->SynchPutInt(recup);
 				break;
 			}
 			default: {

@@ -76,5 +76,19 @@ void SynchConsole::SynchGetString(char *s, int n)
 	s[i] = '\0';
 }
 
+void SynchConsole::SynchPutInt(int n)
+{
+	char *s = new char[MAX_STRING_SIZE];
+	snprintf(s, MAX_STRING_SIZE, "%d", n);
+	synchconsole->SynchPutString(s);
+
+	delete [] s;
+}
+
+void SynchConsole::SynchGetInt( int *n)
+{
+
+}
+
 
 #endif // CHANGED
