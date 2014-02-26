@@ -33,10 +33,15 @@
 void copyStringFromMachine(int from, char *to, unsigned size)
 {
 	unsigned i = 0;
-	for(i = 0; i < size && machine->mainMemory[from+i] !='\0'; i++){
-		to[i] = machine->mainMemory[from+i];
+	int tmp;
+	for(i = 0; i < size ; i++){
+		if(machine->ReadMem(from + i, 1, &tmp))
+		to[i]=tmp;
 	}
-	to[i] = '\0';
+	//si le message ne se fini pas par '\0'...
+	if(i<size && tmp != '\0'){
+	 	to[size-1] = '\0';
+	}
 }
 #endif // CHANGED
 
@@ -47,14 +52,16 @@ void copyStringFromMachine(int from, char *to, unsigned size)
 //-----------------------------------------------------------------------
 
 #ifdef CHANGED
-void copyStringToMachine(char *from, char *to, int size)
+void copyStringToMachine(char *from, int to, unsigned int size)
 {
-	int i = 0;
-	for(i = 0; i < size - 1 && from[i] != '\0'; i++){
-		// char * car si on fait + 1 on se déplace d'un octet
-		machine->mainMemory[(unsigned)(to+i)] = (char) from[i];
-	}
-	machine->mainMemory[(unsigned)(to+i)] = '\0';
+  int tmp;
+  unsigned int i;
+  for(i = 0; i < size - 1; i++){
+  	tmp = from[i];
+   	machine->WriteMem(to + i, 1, tmp);
+  }
+  tmp = '\0';
+  machine->WriteMem(to + i, 1, tmp);
 }
 #endif // CHANGED
 
@@ -127,7 +134,7 @@ ExceptionHandler(ExceptionType which)
 			case SC_SynchPutString: {
 				char *buffer = new char[MAX_STRING_SIZE];
 				int recup = machine->ReadRegister(4);
-       				copyStringFromMachine(recup, buffer, MAX_STRING_SIZE);
+       			copyStringFromMachine(recup, buffer, MAX_STRING_SIZE);
 				synchconsole->SynchPutString(buffer);
        			delete [] buffer;
 				break;
@@ -139,8 +146,8 @@ ExceptionHandler(ExceptionType which)
 			}
 			case SC_SynchGetString: {
 				char *buffer = new char[MAX_STRING_SIZE];
-				char *recup = (char *)machine->ReadRegister(4);
-				int taille = (int)machine->ReadRegister(5);
+				int recup = machine->ReadRegister(4);
+				int taille = machine->ReadRegister(5);
 				synchconsole->SynchGetString(buffer, taille);
 				copyStringToMachine(buffer, recup, taille);
 				delete buffer;
@@ -149,6 +156,13 @@ ExceptionHandler(ExceptionType which)
 			case SC_SynchPutInt: {
 				int recup = machine->ReadRegister(4);
 				synchconsole->SynchPutInt(recup);
+				break;
+			}
+			case SC_SynchGetInt: {
+				int *recup = new int;
+				*recup = machine->ReadRegister(4);
+				synchconsole->SynchGetInt(recup);
+				delete recup;
 				break;
 			}
 			default: {

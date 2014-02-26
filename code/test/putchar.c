@@ -9,7 +9,7 @@ void print(char c, int n)
 	for (i = 0; i < n; i++) {
 		//Ancien test		
 		//PutChar(c+i);
-		string[i] = c + i;	
+		string[i] = c ;	
 	}
 	
 	SynchPutString(string);
@@ -18,7 +18,7 @@ void print(char c, int n)
 int
 main()
 {
-	print('a',10);
+	print('a',600);
 	return 0;
 	
 }

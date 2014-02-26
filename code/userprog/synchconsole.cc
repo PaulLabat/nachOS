@@ -88,6 +88,13 @@ void SynchConsole::SynchPutInt(int n)
 void SynchConsole::SynchGetInt( int *n)
 {
 
+	int retour;
+	// On travail sur des entiers...
+	char *conversion = new char[12];
+	SynchGetString(conversion, 12);
+	sscanf(conversion, "%d", &retour);
+	machine->WriteMem(*n, 4, retour);
+	delete [] conversion;
 }
 
 
