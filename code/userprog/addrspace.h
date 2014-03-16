@@ -13,8 +13,16 @@
 #ifndef ADDRSPACE_H
 #define ADDRSPACE_H
 
+#ifdef CHANGED
+#define MAX_THREADS 3 //nombre max de thread
+#endif // CHANGED
+
 #include "copyright.h"
 #include "filesys.h"
+
+#ifdef CHANGED
+#include "bitmap.h"
+#endif //CHANGED
 
 #define UserStackSize		1024	// increase this as necessary!
 
@@ -29,6 +37,13 @@ class AddrSpace
     void InitRegisters ();	// Initialize user-level CPU registers,
     // before jumping to user code
 
+    #ifdef CHANGED
+    int InitRegistersU(int *threadId); // InitRegister mais pour UserThread (complément de fonction)
+    void deleteThread(); //suppression d'un thread
+    BitMap *bitmap; 
+    
+    #endif // CHANGED
+
     void SaveState ();		// Save/restore address space-specific
     void RestoreState ();	// info on a context switch 
 
@@ -37,6 +52,7 @@ class AddrSpace
     // for now!
     unsigned int numPages;	// Number of pages in the virtual 
     // address space
+
 };
 
 #endif // ADDRSPACE_H

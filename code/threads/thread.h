@@ -89,6 +89,11 @@ class Thread
     // must not be running when delete 
     // is called
 
+
+     #ifdef CHANGED
+     int id; // l'id du thread
+     #endif //CHANGED
+
     // basic thread operations
 
     void Fork (VoidFunctionPtr func, int arg);	// Make thread run (*func)(arg)
