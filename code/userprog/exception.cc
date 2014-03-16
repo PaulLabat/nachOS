@@ -25,6 +25,10 @@
 #include "system.h"
 #include "syscall.h"
 
+#ifdef CHANGED
+#include "userthread.h"
+#endif //CHANGED
+
 //-----------------------------------------------------------------------
 // copyStringFromMachine : use for PutString
 //-----------------------------------------------------------------------
@@ -163,6 +167,14 @@ ExceptionHandler(ExceptionType which)
 				*recup = machine->ReadRegister(4);
 				synchconsole->SynchGetInt(recup);
 				delete recup;
+				break;
+			}
+			case SC_UserThreadCreate: {
+				do_UserThreadCreate((int)machine->ReadRegister(4), (int)machine->ReadRegister(5));
+				break;
+			}
+			case SC_UserThreadExit: {
+				do_UserThreadExit();
 				break;
 			}
 			default: {

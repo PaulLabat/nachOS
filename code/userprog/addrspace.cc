@@ -77,6 +77,7 @@ AddrSpace::AddrSpace (OpenFile * executable)
     numPages = divRoundUp (size, PageSize);
     size = numPages * PageSize;
 
+
     ASSERT (numPages <= NumPhysPages);	// check we're not trying
     // to run anything too big --
     // at least until we have
@@ -120,6 +121,10 @@ AddrSpace::AddrSpace (OpenFile * executable)
 			      noffH.initData.size, noffH.initData.inFileAddr);
       }
 
+    #ifdef CHANGED
+    bitmap = new BitMap((UserStackSize/MAX_THREADS) - 1);
+    bitmap->Mark(0); // ne pas oublié le premier thread, le main
+    #endif //CHANGED
 }
 
 //----------------------------------------------------------------------
@@ -133,6 +138,9 @@ AddrSpace::~AddrSpace ()
   // delete pageTable;
   delete [] pageTable;
   // End of modification
+  #ifdef CHANGED
+  delete bitmap; //suppression de la bitmap
+  #endif //CHANGED
 }
 
 //----------------------------------------------------------------------
@@ -167,6 +175,34 @@ AddrSpace::InitRegisters ()
     DEBUG ('a', "Initializing stack register to %d\n",
 	   numPages * PageSize - 16);
 }
+
+#ifdef CHANGED
+
+int
+AddrSpace::InitRegistersU(int *threadId) {
+    
+    int startStack = numPages*PageSize;
+
+    int renvoyer;
+       
+    *threadId = bitmap->Find();
+    if(*threadId != -1) {
+        renvoyer = startStack - (PageSize*MAX_THREADS*(*threadId));
+        machine->WriteRegister(2,*threadId);
+    }
+    return renvoyer;
+
+}
+
+void
+AddrSpace::deleteThread(){
+    //Suppression du thread de la bitmap
+    bitmap->Clear(currentThread->id);
+
+}
+
+
+#endif //CHANGED
 
 //----------------------------------------------------------------------
 // AddrSpace::SaveState
