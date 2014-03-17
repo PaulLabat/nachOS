@@ -122,8 +122,15 @@ AddrSpace::AddrSpace (OpenFile * executable)
       }
 
     #ifdef CHANGED
-    bitmap = new BitMap((UserStackSize/MAX_THREADS) - 1);
+    nbT = 1; // le main
+    semT = new Semaphore("nbT", 1); // Le problème du nombre de thread qui s'incrémentait mal
+                                              // venait d'ici
+    semBM = new Semaphore("BitMap", 1); // Semaphore pour la Bitmap également
+
+    bitmap = new BitMap((UserStackSize/MAX_PAGE_THREADS) - 1);
     bitmap->Mark(0); // ne pas oublié le premier thread, le main
+
+    semA = new Semaphore("Attente", 0); //Semaphore pour attendre la fin des autres threads
     #endif //CHANGED
 }
 
@@ -184,23 +191,46 @@ AddrSpace::InitRegistersU(int *threadId) {
     int startStack = numPages*PageSize;
 
     int renvoyer;
-       
+    semBM->P();   
     *threadId = bitmap->Find();
     if(*threadId != -1) {
-        renvoyer = startStack - (PageSize*MAX_THREADS*(*threadId));
+        renvoyer = startStack - (PageSize*MAX_PAGE_THREADS*(*threadId));
         machine->WriteRegister(2,*threadId);
     }
+    semBM->V();
     return renvoyer;
 
 }
 
+// lors de la fin d'un thread
+
 void
 AddrSpace::deleteThread(){
+
+    semT->P();
+    semBM->P();
+
+    nbT--;
     //Suppression du thread de la bitmap
     bitmap->Clear(currentThread->id);
-
+    if(nbT == 0){
+        //nous n'avons plus aucun autre thread que le thread principal, on peut donc l'arreter
+        semA->V();
+    }
+    semT->V();
+    semBM->V();
 }
 
+// lors de l'ajout d'un thread
+
+void 
+AddrSpace::addThread(){
+
+    semT->P();
+    nbT++;
+    semT->V();
+  
+}
 
 #endif //CHANGED
 
@@ -231,3 +261,17 @@ AddrSpace::RestoreState ()
     machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
 }
+#ifdef CHANGED
+
+void
+AddrSpace::verificationEnd ()
+{
+    
+    currentThread->space->deleteThread();
+
+    if(nbT != 0){
+        // on doit bloquer le thread principal
+        semA->P();
+    }
+}
+#endif //CHANGED

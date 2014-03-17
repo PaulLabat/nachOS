@@ -26,12 +26,11 @@ static void StartUserThread(int f){
 
     if(machine->ReadRegister(StackReg) == -1) {
         // Une erreur
-        DEBUG('t',"erreur de creation de thread\n");
         currentThread->Finish();
     }
     else {
         // Lancement 
-        DEBUG('t',"Thread%d->run()\n",currentThread->id);
+        currentThread->space->addThread();
         machine->Run();
     }
 }

@@ -8,6 +8,9 @@
 
 static Semaphore *readAvail;
 static Semaphore *writeDone;
+static Semaphore *semaphoreSynchConsole;
+static Semaphore *semaphoreSynchString;
+static Semaphore *semaphoreSynchInt;
 
 static void ReadAvail(int arg) { readAvail->V(); }
 static void WriteDone(int arg) { writeDone->V(); }
@@ -17,6 +20,9 @@ SynchConsole::SynchConsole(char *readFile, char *writeFile)
 	readAvail = new Semaphore("read avail", 0);
 	writeDone = new Semaphore("write done", 0);
 	console = new Console(readFile, writeFile, ReadAvail, WriteDone, 0); // Completer, initialisation des sempahores a 0
+	semaphoreSynchConsole = new Semaphore("SynchConsole", 1);
+	semaphoreSynchString = new Semaphore("SynchString", 1);
+	semaphoreSynchInt = new Semaphore("SynchInt", 1);
 }
 
 SynchConsole::~SynchConsole()
@@ -28,36 +34,45 @@ SynchConsole::~SynchConsole()
 
 void SynchConsole::SynchPutChar(const char ch)
 {
+	semaphoreSynchConsole->P();
+
+	/* Zone pour les <> autour des lettres
 	if(ch != '\n'){
 		console->PutChar('<');
 		writeDone->P();
 	}
-	//semPutChar->P();
-        
+	*/
+	        
 	console->PutChar(ch);
         writeDone->P();
-	//semPutChar->V();
-        
+
+    /* Zone pour <>    
 	if(ch != '\n'){
 		console->PutChar('>');
-	        writeDone->P();
-	}
+	    writeDone->P();
+	}*/
+
+	semaphoreSynchConsole->V();
 }
 
 char SynchConsole::SynchGetChar()
 {
+
 	readAvail->P ();
 	return console->GetChar ();
+
 
 }
 
 void SynchConsole::SynchPutString(const char s[])
 {
+	semaphoreSynchString->P();
 	int i;
         for(i=0;i<MAX_STRING_SIZE && s[i]!='\0';i++) {
                 synchconsole->SynchPutChar((char)s[i]);
         }
         synchconsole->SynchPutChar('\n');
+    semaphoreSynchString->V();    
 }
 
 void SynchConsole::SynchGetString(char *s, int n)
@@ -78,11 +93,13 @@ void SynchConsole::SynchGetString(char *s, int n)
 
 void SynchConsole::SynchPutInt(int n)
 {
+	semaphoreSynchInt->P();
 	char *s = new char[MAX_STRING_SIZE];
 	snprintf(s, MAX_STRING_SIZE, "%d", n);
 	synchconsole->SynchPutString(s);
 
 	delete [] s;
+	semaphoreSynchInt->V();
 }
 
 void SynchConsole::SynchGetInt( int *n)

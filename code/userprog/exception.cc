@@ -128,6 +128,8 @@ ExceptionHandler(ExceptionType which)
 				break;
 			}
 			case SC_Exit: {
+				DEBUG('a', "End of a Thread.\n");
+				currentThread->space->verificationEnd();
 				break;
 			}
 			case SC_PutChar: {
