@@ -26,6 +26,7 @@ static void StartUserThread(int f){
 
     if(machine->ReadRegister(StackReg) == -1) {
         // Une erreur
+        printf("\nError during the creation of a new thread\n");
         currentThread->Finish();
     }
     else {
@@ -59,6 +60,7 @@ int do_UserThreadCreate(int f, int arg){
 
 void 
 do_UserThreadExit() {
+		
         currentThread->space->deleteThread();
         currentThread->Finish();
 }

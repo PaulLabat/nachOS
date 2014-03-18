@@ -127,10 +127,12 @@ AddrSpace::AddrSpace (OpenFile * executable)
                                               // venait d'ici
     semBM = new Semaphore("BitMap", 1); // Semaphore pour la Bitmap également
 
-    bitmap = new BitMap((UserStackSize/MAX_PAGE_THREADS) - 1);
+    bitmap = new BitMap(UserStackSize/(MAX_PAGE_THREADS * PageSize));
+    //printf("taille de la BitMap : %d\n", (UserStackSize/(MAX_PAGE_THREADS * PageSize)) - 1);
     bitmap->Mark(0); // ne pas oublié le premier thread, le main
 
     semA = new Semaphore("Attente", 0); //Semaphore pour attendre la fin des autres threads
+    
     #endif //CHANGED
 }
 
@@ -190,12 +192,11 @@ AddrSpace::InitRegistersU(int *threadId) {
     
     int startStack = numPages*PageSize;
 
-    int renvoyer;
+    int renvoyer = -1;
     semBM->P();   
     *threadId = bitmap->Find();
     if(*threadId != -1) {
         renvoyer = startStack - (PageSize*MAX_PAGE_THREADS*(*threadId));
-        machine->WriteRegister(2,*threadId);
     }
     semBM->V();
     return renvoyer;
