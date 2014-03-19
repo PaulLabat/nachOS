@@ -35,9 +35,9 @@ class AddrSpace
     // initializing it with the program
     // stored in the file "executable"
     ~AddrSpace ();		// De-allocate an address space
-
+    #ifdef CHANGED
     Semaphore *semJoin[UserStackSize/MAX_PAGE_THREADS];
-
+    #endif //CHANGED
     void InitRegisters ();	// Initialize user-level CPU registers,
     // before jumping to user code
 
