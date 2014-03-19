@@ -51,8 +51,12 @@ int do_UserThreadCreate(int f, int arg){
     	newThread->Fork(StartUserThread, (int)argv);
     }
     currentThread->space->semJoin[newThread->id]->P();
+
     //récupération de l'id du thread !
     machine->WriteRegister(2, newThread->id);
+    // Sans cela, obligation d'effectuer une action  dans le main, car les threads sont justes créés mais
+    // pas encore démarrés
+    currentThread->Yield();
 	return 0;
 
 }

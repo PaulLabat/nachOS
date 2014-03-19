@@ -9,8 +9,10 @@
 static Semaphore *readAvail;
 static Semaphore *writeDone;
 static Semaphore *semaphoreSynchConsole;
-static Semaphore *semaphoreSynchString;
-static Semaphore *semaphoreSynchInt;
+static Semaphore *semaphoreSynchPut;
+static Semaphore *semaphoreSynchGet;
+static Semaphore *semaphoreSynchPut2;
+static Semaphore *semaphoreSynchGet2;
 
 static void ReadAvail(int arg) { readAvail->V(); }
 static void WriteDone(int arg) { writeDone->V(); }
@@ -21,8 +23,10 @@ SynchConsole::SynchConsole(char *readFile, char *writeFile)
 	writeDone = new Semaphore("write done", 0);
 	console = new Console(readFile, writeFile, ReadAvail, WriteDone, 0); // Completer, initialisation des sempahores a 0
 	semaphoreSynchConsole = new Semaphore("SynchConsole", 1);
-	semaphoreSynchString = new Semaphore("SynchString", 1);
-	semaphoreSynchInt = new Semaphore("SynchInt", 1);
+	semaphoreSynchPut = new Semaphore("SynchPut", 1);
+	semaphoreSynchGet = new Semaphore("SynchGet", 1);
+	semaphoreSynchPut2 = new Semaphore("SynchPut2", 1);
+	semaphoreSynchGet2 = new Semaphore("SynchGet2", 1);
 }
 
 SynchConsole::~SynchConsole()
@@ -35,7 +39,6 @@ SynchConsole::~SynchConsole()
 void SynchConsole::SynchPutChar(const char ch)
 {
 	semaphoreSynchConsole->P();
-
 	/* Zone pour les <> autour des lettres
 	if(ch != '\n'){
 		console->PutChar('<');
@@ -66,17 +69,18 @@ char SynchConsole::SynchGetChar()
 
 void SynchConsole::SynchPutString(const char s[])
 {
-	semaphoreSynchString->P();
+	semaphoreSynchPut->P();
 	int i;
         for(i=0;i<MAX_STRING_SIZE && s[i]!='\0';i++) {
                 synchconsole->SynchPutChar((char)s[i]);
         }
         synchconsole->SynchPutChar('\n');
-    semaphoreSynchString->V();    
+    semaphoreSynchPut->V();    
 }
 
 void SynchConsole::SynchGetString(char *s, int n)
 {
+	semaphoreSynchGet->P();
 	int i;
 	char c;
 	// attention a ne pas depasser la taille limite...
@@ -89,22 +93,23 @@ void SynchConsole::SynchGetString(char *s, int n)
 		}
 	}
 	s[i] = '\0';
+	semaphoreSynchGet->V();
 }
 
 void SynchConsole::SynchPutInt(int n)
 {
-	semaphoreSynchInt->P();
+	semaphoreSynchPut2->P();
 	char *s = new char[MAX_STRING_SIZE];
 	snprintf(s, MAX_STRING_SIZE, "%d", n);
 	synchconsole->SynchPutString(s);
 
 	delete [] s;
-	semaphoreSynchInt->V();
+	semaphoreSynchPut2->V();
 }
 
 void SynchConsole::SynchGetInt( int *n)
 {
-
+	semaphoreSynchGet2->P();
 	int retour;
 	// On travail sur des entiers...
 	char *conversion = new char[12];
@@ -112,6 +117,7 @@ void SynchConsole::SynchGetInt( int *n)
 	sscanf(conversion, "%d", &retour);
 	machine->WriteMem(*n, 4, retour);
 	delete [] conversion;
+	semaphoreSynchGet2->V();
 }
 
 

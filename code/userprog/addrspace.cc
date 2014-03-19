@@ -276,7 +276,9 @@ void
 AddrSpace::verificationEnd ()
 {
     
-    currentThread->space->deleteThread();
+    semT->P();
+    nbT--;
+    semT->V();
 
     if(nbT != 0){
         // on doit bloquer le thread principal

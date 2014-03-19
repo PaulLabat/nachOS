@@ -14,7 +14,7 @@
 #define ADDRSPACE_H
 
 #ifdef CHANGED
-#define MAX_PAGE_THREADS 3 //nombre max de thread
+#define MAX_PAGE_THREADS 3 //nombre max de pages par threads thread
 #endif // CHANGED
 
 #include "copyright.h"
