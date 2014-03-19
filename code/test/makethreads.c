@@ -2,10 +2,14 @@
 
 
 void print(int i){
-
-	SynchPutString("Coucou, je m'execute dans un thread");
-	SynchPutInt(i);
-	
+	int j = 0;
+	for(j = 0; j < 3; j++){
+		if(i%2 == 0){
+			SynchPutString("Coucou, je m'execute dans un thread avec un param pair !");
+		}else{
+			SynchPutString("Coucou, je m'execute dans un thread avec un param impaire !");
+		}
+	}
 	//char z = SynchGetChar();
 	//PutChar(z);
 
@@ -13,12 +17,15 @@ void print(int i){
 }
 
 int main(){
+	int t1, t2;
+	t1 = UserThreadCreate(print,(void *) 7);
+	t2 = UserThreadCreate(print,(void *) 8);
 
-	UserThreadCreate(print,(void *) 7);
-	UserThreadCreate(print,(void *) 8);
 
+	UserThreadJoin(t1);
 	//char a = SynchGetChar();
 	//PutChar(a);
 	SynchPutString("Je suis le thread principal !");
+
 	return 0;
 }

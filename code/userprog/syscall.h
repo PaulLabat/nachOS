@@ -42,6 +42,7 @@
  //Etape 3 ajout des appels systemes thread
 #define SC_UserThreadCreate 17
 #define SC_UserThreadExit 	18
+#define SC_UserThreadJoin	19
 #endif // CHANGED
 
 #ifdef IN_USER_MODE
@@ -155,6 +156,7 @@ void SynchGetInt(int *n);
 //Etape 3 affichage 
 int UserThreadCreate(void *f, void *arg);
 void UserThreadExit();
+void UserThreadJoin();
 #endif // CHANGED
 
 #endif // IN_USER_MODE

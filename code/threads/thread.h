@@ -91,7 +91,8 @@ class Thread
 
 
      #ifdef CHANGED
-     int id; // l'id du thread
+     int id; // l'id du thread dans la bitmap
+     int tid; // l'id du thread en lui même
      #endif //CHANGED
 
     // basic thread operations

@@ -36,6 +36,8 @@ class AddrSpace
     // stored in the file "executable"
     ~AddrSpace ();		// De-allocate an address space
 
+    Semaphore *semJoin[UserStackSize/MAX_PAGE_THREADS];
+
     void InitRegisters ();	// Initialize user-level CPU registers,
     // before jumping to user code
 
@@ -52,6 +54,9 @@ class AddrSpace
 
     void verificationEnd();
 
+    int getID();
+
+
   private:
     TranslationEntry * pageTable;	// Assume linear page table translation
     // for now!
@@ -62,6 +67,7 @@ class AddrSpace
     Semaphore *semT;
     Semaphore *semBM;
     Semaphore *semA;
+
     int nbT;
     BitMap *bitmap;
     #endif //CHANGED

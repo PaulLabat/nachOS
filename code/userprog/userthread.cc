@@ -23,17 +23,9 @@ static void StartUserThread(int f){
 	machine->WriteRegister(StackReg, currentThread->space->InitRegistersU(&(currentThread->id)));
   	
 
-
-    if(machine->ReadRegister(StackReg) == -1) {
-        // Une erreur
-        printf("\nError during the creation of a new thread\n");
-        currentThread->Finish();
-    }
-    else {
-        // Lancement 
-        currentThread->space->addThread();
-        machine->Run();
-    }
+    // Lancement 
+    currentThread->space->addThread();
+    machine->Run();
 }
 
 
@@ -44,25 +36,38 @@ int do_UserThreadCreate(int f, int arg){
 		return -1;
 	}
 
-
 	// Arguments concatenes
 	argThreadUser * argv = new argThreadUser;
 	argv->f = f;
 	argv->arg = arg;
 
-
-	// Plaçage en liste d'attente
-	newThread->Fork(StartUserThread, (int)argv);
-
+    newThread->id = currentThread->space->getID();
+    if(newThread->id == -1){
+        // Une erreur
+        printf("\nError during the creation of a new thread\n");
+        delete newThread;
+    }else{
+    	// Plaçage en liste d'attente
+    	newThread->Fork(StartUserThread, (int)argv);
+    }
+    currentThread->space->semJoin[newThread->id]->P();
+    //récupération de l'id du thread !
+    machine->WriteRegister(2, newThread->id);
 	return 0;
 
 }
 
 void 
 do_UserThreadExit() {
-		
+		currentThread->space->semJoin[currentThread->id]->V();
         currentThread->space->deleteThread();
         currentThread->Finish();
+}
+
+void
+do_UserThreadJoin(int i){
+
+    currentThread->space->semJoin[i]->P();
 }
 
 #endif //CHANGED
