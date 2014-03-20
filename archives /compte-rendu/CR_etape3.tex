@@ -1,0 +1,330 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\usepackage{subfigure}
+\usepackage{multicol}
+\usepackage[usenames,dvipsnames]{color}
+\definecolor{darkgray}{rgb}{0.95,0.95,0.95}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{textcomp}
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\lstset{
+    backgroundcolor=\color{lbcolor},
+    tabsize=4,
+    rulecolor=,
+    language=C++,
+    basicstyle=\scriptsize,
+    upquote=true,
+    aboveskip={1.5\baselineskip},
+    columns=fixed,
+    showstringspaces=false,
+    extendedchars=true,
+    breaklines=true,
+    prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+    frame=single,
+    showtabs=false,
+    showspaces=false,
+    showstringspaces=false,
+    identifierstyle=\ttfamily,
+    keywordstyle=\color[rgb]{0,0,1},
+    commentstyle=\color[rgb]{0.133,0.545,0.133},
+    stringstyle=\color[rgb]{0.627,0.126,0.941},
+}
+\lstset{language=C++}
+\lstset{backgroundcolor=\color{darkgray}}
+
+\usepackage[left=1.0cm, right=1.0cm, top=2cm, bottom=4cm]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\usepackage{lastpage}
+\renewcommand\headrulewidth{1pt}
+\fancyhead[L]{\textsc{Nachos Étape 3 : Multithreading}}
+\fancyhead[R]{\textsc{Polytech' Grenoble}}	
+\renewcommand\footrulewidth{1pt}
+\fancyfoot[R]{ \textsc{RICM 4}}
+
+\begin{document}
+\begin{titlepage}
+
+\begin{center}
+
+
+% Upper part of the page
+\includegraphics[width=0.25\textwidth]{../Desktop/POLYTECH_RVB.jpg}\\[1cm]
+
+\textsc{\LARGE Polytech' Grenoble}\\[1.5cm]
+
+\textsc{\Large RICM 4ème année}\\[1.2cm]
+
+
+% Title
+\HRule \\[0.4cm]
+{ \huge \bfseries NachOS\\[0.6cm]
+Etape 3: Multithreading}
+\\[0.4cm]
+
+\HRule \\[2cm]
+
+% Author and supervisor
+\begin{minipage}{0.4\textwidth}
+\begin{flushleft} \large
+\emph{\'Etudiants:}\\
+Paul \textsc{LABAT} \\
+Rodolphe \textsc{FREBY} \\
+Kai \textsc{GUO} \\
+Zhengmeng \textsc{ZHANG}
+\end{flushleft}
+\end{minipage}
+\begin{minipage}{0.4\textwidth}
+\begin{flushright} \large
+\emph{Professeur:} \\
+Jean-françois \textsc{MEHAUT}
+\end{flushright}
+\end{minipage}
+
+\vfill
+
+% Bottom of the page
+{\large  Mars 2014}
+
+\end{center}
+
+\end{titlepage}
+
+\section{Applications multi-thread}
+
+\subsection{La classe UserThread}
+Pour implémenter les threads utilisateurs nous avons créé une nouvelle classe
+UserThread. Cet objet va servir également à stocker les arguments qu'on passe à la fonction UserThreadCreate().
+
+\textit{code/userprog/userthread.h}
+\begin{lstlisting}
+typedef struct{
+	int f;
+	int arg;
+}argThreadUser;
+
+extern int do_UserThreadCreate(int f, int arg);
+extern void do_UserThreadExit();
+extern void do_UserThreadJoin(int i);
+\end{lstlisting}
+
+\textit{code/userprog/userthread.cc}
+\begin{lstlisting}
+static void StartUserThread(int f){
+
+  	//Recuperation des parametres passes precedements
+  	argThreadUser *argRecup = (argThreadUser *) f;
+
+
+    //Initialisation des registres
+    // Mise en place le PC correctement, en debut de fonction
+    machine->WriteRegister (PCReg, argRecup->f);
+    // Mise place ensuite l'argument dans le registre 4
+    machine->WriteRegister(4, argRecup->arg);
+    
+    // Mise en place du PC Next pour l'instruction suivante
+    machine->WriteRegister (NextPCReg, argRecup->f+4);
+
+    // Initialisation de la bitmap 
+	machine->WriteRegister(StackReg, currentThread->space->InitRegistersU(&(currentThread->id)));
+  	
+
+    // Lancement 
+    currentThread->space->addThread();
+    machine->Run();
+}
+\end{lstlisting}
+
+\subsection{Modifications de l'espace d'adressage du processus}
+
+Pour gérer plusieurs threads, nous sommes obligés de modifier l'espace
+d'adressage (AddrSpace) du processus. Nous avons entre autres ajouté le nombre
+de threads en exécution, un objet bitmap pour gérer l'allocation des
+zones des threads et des sémaphores pour utiliser ces attributs en section
+critique. Chaque thread a sa propre pile qui est une partie de la pile du
+processus (sa taille est de 3 pages). Nous sommes donc naturellement limités en
+nombre de threads simultanés par processus. Lorsque cette limitation
+se manifeste, on renvoie simplement un code d'erreur (-1).
+
+\textit{code/userprog/addrspace.cc}
+\begin{lstlisting}
+int AddrSpace::InitRegistersU(int *threadId) {
+    
+    int startStack = numPages*PageSize;
+
+    int renvoyer = -1;
+    semBM->P();   
+    //*threadId = bitmap->Find();
+    if(*threadId != -1) {
+        renvoyer = startStack - (PageSize*MAX_PAGE_THREADS*(*threadId));
+    }
+    semBM->V();
+    return renvoyer;
+
+}
+
+// lors de la fin d'un thread
+
+void AddrSpace::deleteThread(){
+
+    semT->P();
+    semBM->P();
+
+    nbT--;
+    //Suppression du thread de la bitmap
+    bitmap->Clear(currentThread->id);
+    if(nbT == 0){
+        //nous n'avons plus aucun autre thread que le thread principal, on peut donc l'arreter
+        semA->V();
+    }
+    semT->V();
+    semBM->V();
+}
+
+// lors de l'ajout d'un thread
+
+void AddrSpace::addThread(){
+
+    semT->P();
+    nbT++;
+    semT->V();
+  
+}
+\end{lstlisting}
+
+\subsection{Mécanisme d'attente des threads (UserThreadJoin)}
+
+Nous utilisons un tableau de sémaphore de la taille du nombre maximal de threads.
+Chaque thread (A) qui veut se bloquer sur un autre (B) va devoir prendre un jeton
+du sémaphore lié au thread B sur lequel il veut se bloquer. Ces sémaphores sont
+donc bloquants lorsque le thread B est en cours d'exécution.
+
+Une fois terminé, le thread B va réveiller les threads qui se sont bloqués que
+lui en déposant un jeton dans le sémaphore concerné.
+Pour permettre à plusieurs threads de se bloquer sur le même thread, la phase
+de réveil doit se faire en chaîne, c'est-à-dire chaque thread réveillé doit
+réveiller le suivant etc..
+
+Ce mécanisme doit également bloquer le prochain thread qui va s'exécuter dans
+la nouvelle zone liberée par le thread B.
+
+Pour arriver à ce résultat, nous initialisons le tableau de sémaphore à un jeton
+chacun. A chaque création, il faut prendre un jeton (pour que le sémaphore
+devienne bloquant pour tous les threads qui appellent \textbf{UserThreadJoin()}).
+S'il y a une phase de réveil qui est en cours, ce nouveau thread sera bloqué,
+et c'est ce qu'on cherche pour pas qu'un thread bloqué sur un thread spécifique
+se retrouve bloqué sur d'autres (avec le risque qu'il ne se réveille jamais)
+
+\textit{code/test/userthread.cc}
+\begin{lstlisting}
+int do_UserThreadCreate(int f, int arg){
+	Thread *newThread = new Thread("new thread");
+	// Si le thread cree est nul, on renvoie -1
+	if(newThread == NULL){
+		return -1;
+	}
+
+	// Arguments concatenes
+	argThreadUser * argv = new argThreadUser;
+	argv->f = f;
+	argv->arg = arg;
+
+    newThread->id = currentThread->space->getID();
+    if(newThread->id == -1){
+        // Une erreur
+        printf("\nError during the creation of a new thread\n");
+        delete newThread;
+    }else{
+    	// Placage en liste d'attente
+    	newThread->Fork(StartUserThread, (int)argv);
+    }
+    currentThread->space->semJoin[newThread->id]->P();
+
+    //recuperation de l'id du thread !
+    machine->WriteRegister(2, newThread->id);
+    // Sans cela, obligation d'effectuer une action  dans le main, car les threads sont justes crees mais
+    // pas encore demarres
+    currentThread->Yield();
+	return 0;
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+void do_UserThreadExit() {
+		currentThread->space->semJoin[currentThread->id]->V();
+        currentThread->space->deleteThread();
+        currentThread->Finish();
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+void do_UserThreadJoin(int i){
+
+    currentThread->space->semJoin[i]->P();
+}
+\end{lstlisting}
+
+\section{Test de l'étape 3}
+
+Vous pouvez soit lancer le script de test automatique \textit{runtest.sh} soit
+lancer manuellement les deux programmes \textit{./build-origin/nachos-userprog
+-rs 1 -x ./build/jointhreads} et \textit{./build-origin/nachos-userprog -rs 1 -x
+./build/makethreads}
+
+\textit{code/test/userthread.cc}
+\begin{lstlisting}
+#include "syscall.h"
+
+void print(int i){
+	int j = 0;
+	for(j = 0; j < 3; j++){
+		if(i%2 == 0){
+			SynchPutString("Coucou, je m'execute dans un thread avec un param pair !");
+		}else{
+			SynchPutString("Coucou, je m'execute dans un thread avec un param impaire !");
+		}
+	}
+	UserThreadExit();
+}
+
+int main(){
+	int t1, t2;
+	t1 = UserThreadCreate(print,(void *) 7);
+	t2 = UserThreadCreate(print,(void *) 8);
+	return 0;
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+$ ./nachos-userprog -rs 1 -x makethreads
+Coucou, je m'execute dans un thread avec un param impaire !
+Coucou, je m'execute dans un thread avec un param impaire !
+Coucou, je m'execute dans un thread avec un param impaire !
+Coucou, je m'execute dans un thread avec un param pair !
+Coucou, je m'execute dans un thread avec un param pair !
+Coucou, je m'execute dans un thread avec un param pair !
+Machine halting!
+
+Ticks: total 47138, idle 34966, system 11960, user 212
+Disk I/O: reads 0, writes 0
+Console I/O: reads 0, writes 351
+Paging: faults 0
+Network I/O: packets received 0, sent 0
+
+Cleaning up...
+\end{lstlisting}
+
+Sans l'option -rs le thread main ne donne jamais la main aux autres
+threads. Comme on peut le voir sur le test, le nombre de threads simultanés
+est limité (par la taille de l'espace d'adressage et la taille de la
+pile d'un thread). Dans ce cas un code d'erreur (-1) est renvoyé lors de
+l'appel à \textit{UserThreadCreate}.
+
+
+\end{document}
