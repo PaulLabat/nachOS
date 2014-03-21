@@ -1,5 +1,6 @@
 #include "syscall.h"
 
+
 void print(int i){
 	int j = 0;
 	for(j = 0; j < 3; j++){
@@ -23,7 +24,6 @@ int main(){
 
 	//UserThreadJoin(t1);
 	//char a = SynchGetChar();
-	
 
 
 	return 0;
