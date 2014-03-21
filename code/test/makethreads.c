@@ -21,7 +21,8 @@ int main(){
 	t2 = UserThreadCreate(print,(void *) 8);
 
 
-	//UserThreadJoin(t1);
+	UserThreadJoin(t1);
+	SynchPutString("Je suis le thread principal");
 	//char a = SynchGetChar();
 	
 
